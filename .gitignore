@@ -5,6 +5,8 @@ area/copyover.data
 log/*.log
 player/*
 !player/.gitignore
+gods/*
+!gods/.gitignore
 src/obj/
 src/*.o
 src/*~

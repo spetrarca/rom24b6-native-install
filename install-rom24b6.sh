@@ -17,7 +17,7 @@ if ((${#missing[@]} > 0)); then
   exit 1
 fi
 
-mkdir -p "$ROOT/log" "$ROOT/player"
+mkdir -p "$ROOT/log" "$ROOT/player" "$ROOT/gods"
 make -C "$ROOT/src" clean
 make -C "$ROOT/src"
 

@@ -51,7 +51,9 @@ telnet localhost 4000
 ./run-rom24b6.sh restart
 ```
 
-The run helper writes its pid to `rom.pid` and logs to `log/rom.log`.
+The install and run helpers create the runtime directories the game writes into:
+`log/`, `player/`, and `gods/`. The run helper writes its pid to `rom.pid` and
+logs to `log/rom.log`.
 
 For an Azure VM, also open TCP `4000` in the VM network security group and use a
 non-root Linux user to run the game.
@@ -62,7 +64,8 @@ This repo does not ship with a default player credential.
 
 To create the first immortal, start the game, create a mortal character, play at
 least to level 2, stop the server, then edit that character's file under
-`player/` to raise the level and security. After that first immortal exists, use
+`player/` to raise the level, trust, and security. For an implementor, set
+`Levl 60`, `Tru  60`, and `Sec  9`. After that first immortal exists, use
 in-game commands to advance other builders.
 
 ## Content Editing

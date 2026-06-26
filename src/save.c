@@ -136,10 +136,12 @@ void save_char_obj (CHAR_DATA * ch)
             bug ("Save_char_obj: fopen", 0);
             perror (strsave);
         }
-
-        fprintf (fp, "Lev %2d Trust %2d  %s%s\n",
-                 ch->level, get_trust (ch), ch->name, ch->pcdata->title);
-        fclose (fp);
+        else
+        {
+            fprintf (fp, "Lev %2d Trust %2d  %s%s\n",
+                     ch->level, get_trust (ch), ch->name, ch->pcdata->title);
+            fclose (fp);
+        }
         fpReserve = fopen (NULL_FILE, "r");
     }
 #endif

@@ -11,18 +11,23 @@ is_running() {
   [[ -s "$PID_FILE" ]] && kill -0 "$(cat "$PID_FILE")" 2>/dev/null
 }
 
+ensure_runtime_dirs() {
+  mkdir -p "$ROOT/log" "$ROOT/player" "$ROOT/gods"
+}
+
 start() {
   if is_running; then
     echo "QuickMUD / ROM is already running on port $PORT (pid $(cat "$PID_FILE"))."
     return 0
   fi
 
+  ensure_runtime_dirs
+
   if [[ ! -x "$AREA_DIR/rom" ]]; then
     echo "Missing $AREA_DIR/rom. Build first with ./install-rom24b6.sh." >&2
     return 1
   fi
 
-  mkdir -p "$ROOT/log"
   cd "$AREA_DIR"
   rm -f shutdown.txt
   setsid ./rom "$PORT" > "$LOG_FILE" 2>&1 < /dev/null &
