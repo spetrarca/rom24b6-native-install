@@ -1,71 +1,88 @@
-QuickMUD is derived from ROM 2.4b6, Merc 2.1 and DikuMUD
-==============
+# QuickMUD / ROM 2.4b6 Native Install
 
-## Introduction
+QuickMUD is derived from ROM 2.4b6, Merc 2.1, and DikuMUD. This fork is set up
+for a native Ubuntu VM install: clone the repo, compile the C source on the VM,
+and run the server directly from the checkout.
 
-QuickMUD / ROM is a "[multi-user dungeon](https://en.wikipedia.org/wiki/MUD)", a text-based MMORPG. ROM is well-known for its fast-paced and exciting combat system. It also happens to be the initial codebase for [Carrion Fields](http://www.carrionfields.net/), the greatest MUD of all time.
+## What This Includes
 
-## Docker Image
+QuickMUD is a mostly stock ROM 2.4b6 codebase with these major additions:
 
-You can run the pre-built docker image with the following command:
+- OLC 1.81
+- Lope's Color 2.0
+- Erwin's Copyover
+- Erwin's Noteboard
+- Color Login
 
-```docker run -d -p 4000:4000 avinson/rom```
+The area editor files are included. See `area/olc.hlp` and `doc/changes.olc`
+for OLC notes.
 
-After that, connect like this:
+## Ubuntu VM Install
 
-```telnet localhost 4000```
+On a fresh Ubuntu VM:
 
-If you have docker-compose available, a simple `docker-compose up` will start the
-container and mount the player and log directories for easier saving/editing of
-player files.
+```sh
+sudo apt update
+sudo apt install -y git build-essential libcrypt-dev
+git clone https://github.com/spetrarca/rom24b6-native-install.git
+cd rom24b6-native-install
+./install-rom24b6.sh
+./run-rom24b6.sh start
+```
+
+The server listens on port `4000` by default. To use a different port:
+
+```sh
+ROM_PORT=5000 ./run-rom24b6.sh start
+```
+
+Connect with a MUD client or telnet:
+
+```sh
+telnet localhost 4000
+```
+
+## Managing The Server
+
+```sh
+./run-rom24b6.sh status
+./run-rom24b6.sh log
+./run-rom24b6.sh stop
+./run-rom24b6.sh restart
+```
+
+The run helper writes its pid to `rom.pid` and logs to `log/rom.log`.
+
+For an Azure VM, also open TCP `4000` in the VM network security group and use a
+non-root Linux user to run the game.
 
 ## First Immortal
 
-A level 2 character named Shemp is included with a password of `psswrd`. You
-can edit this file to create an immortal character or follow the instructions
-below.
+This repo does not ship with a default player credential.
 
------
+To create the first immortal, start the game, create a mortal character, play at
+least to level 2, stop the server, then edit that character's file under
+`player/` to raise the level and security. After that first immortal exists, use
+in-game commands to advance other builders.
 
-To make your first immortal character, just start as a mortal
-character, play at least as far as level 2, and then edit the
-player file and change your level.  (After the first immortal,
-you can advance the rest)
+## Content Editing
 
-QuickMUD is a Rom24b6 codebase with the following major features added:
+QuickMUD includes OLC. Common builder commands include:
 
-* OLC 1.81
-* Lope's Color 2.0
-* Erwin's Copyover
-* Erwin's Noteboard
-* Color Login
+- `redit` for rooms
+- `oedit` for objects
+- `medit` for mobiles/NPCs
+- `aedit` for areas
+- `mpedit` for mob programs
+- `hedit` for help entries
 
-It is still basically a "stock" ROM server.  The  functionality  of the
-code hasn't been modified much except for the addition of  OLC. Changes
-are pretty much limited to cosmetic features, like color login.  If you
-want to start your own ROM based server, this code can give you a quick
-start with some standard 'extra features' already implemented. However,
-for the sake of the mudding community at  large,  don't  just  download
-this code, compile it, and advertise it on MUD websites  as  "a  highly
-modified  ROM  codebase".  Spend  some  time  developing  it. The world
-doesn't need another cookie-cutter MUD.
+ROM/QuickMUD still uses prototype data files under `area/`, so keep the repo in
+Git and commit content changes as you build.
 
------
+## License Notes
 
-This is the ROM 2.4 beta version of Merc 2.1 base code.
-Please read the file in /Rom24/doc called rom.license before using
-this program.
+This is the ROM 2.4 beta version of Merc 2.1 base code. Read the license files
+in `doc/`, especially `doc/rom.license`, `doc/license.txt`, and
+`doc/license.doc`, before running a public game.
 
------
-
-Merc Diku Mud is a Diku Mud with many enhancements and contributions.  See our
-'contrib.txt' and 'help merc' for acknowledgements.  Send us your contribution,
-and you'll be in there too!
-
-Enjoy our mud.  May your visit here be ... Mercenary.
-
-This is the 2.1 production release of Merc.
-
------
-
-See other READMEs in the repo for full info and licenses.
+See the other README files in this repository for historical project notes.

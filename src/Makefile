@@ -8,7 +8,7 @@ RM = rm
 EXE = ../area/rom
 PROF = -O -g3
 
-C_FLAGS = $(PROF) -Wall
+C_FLAGS = $(PROF) -Wall -fcommon
 L_FLAGS = $(PROF) -lcrypt
 
 #IMC2 - Comment out to disable IMC2 support

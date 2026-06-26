@@ -1,0 +1,13 @@
+rom.pid
+area/rom
+area/shutdown.txt
+area/copyover.data
+log/*.log
+player/*
+!player/.gitignore
+src/obj/
+src/*.o
+src/*~
+src/*.bak
+src/*.orig
+src/*.rej
