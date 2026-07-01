@@ -2,3 +2,47 @@
 [ 3001] Flugh: olc
 [ 3001] Flugh: olc edit
 [ 3001] Flugh: alist
+[ 3054] Norm: bholy
+[ 3054] Norm: guild
+[    1] Norm: flag
+[ 3721] Gwalto: diploma
+[    2] Norm: mpstat
+[ 3715] Norm: repop
+[  120] Hussein: donat
+[ 3054] Hussein: dex
+[ 3054] Hussein: attribute
+[ 3054] Hussein: stat
+[ 3054] Hussein: ability
+[ 3054] Hussein: dexterity
+[    1] Norm: build
+[    1] Norm: copyover
+[    1] Norm: guild
+[ 1117] Norm: bard
+[10000] Norm: set obj
+[ 3713] AlthaPoster: weild
+[ 3748] AlthaPoster: hp
+[ 3748] AlthaPoster: damage
+[ 3748] AlthaPoster: damage
+[ 6150] AlthaPoster: bleeding
+[ 6150] AlthaPoster: damage
+[ 3001] Hussein: storage
+[ 3001] Hussein: locker
+[10000] Norm: warpstone
+[10000] Norm: pill
+[10000] Norm: hedit
+[10000] Norm: data
+[10000] Norm: story
+[10000] Norm: story
+[10000] Norm: areset
+[ 3700] Hitler: chat
+[ 3757] Hitler: channels
+[ 3700] Hitler: class
+[ 3700] Hitler: classes
+[ 3700] Hitler: wizards
+[ 3758] Hitler: here
+[ 3700] Frogguy: idea
+[    0] Hitler: weaponmaster
+[    0] Hitler: weaponmaster
+[ 5270] Norm: door
+[ 7883] Norm: room
+[ 3001] Norm: guild

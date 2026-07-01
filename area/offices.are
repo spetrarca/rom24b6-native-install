@@ -1,0 +1,59 @@
+#AREADATA
+Name Offices and Testing~
+Builders Norm~
+VNUMs 10000 10049
+Credits 54 60} Offices and Testing~
+Security 1
+End
+
+
+
+#MOBILES
+#0
+
+
+
+#OBJECTS
+#10000
+mic microphone stand~
+microphone on a stand~
+A microphone on a stand is daring you to speak your mind.~
+unknown~
+furniture 0 0
+0 0 0 0 0
+0 70 0 P
+#0
+
+
+
+#ROOMS
+#10000
+The Laugh Factory~
+An empty comedy club. It stinks of stale cigarette smoke and desperation.
+~
+0 8200 0
+S
+#0
+
+
+
+#SPECIALS
+S
+
+
+
+#RESETS
+O 0 10000 0 10000 Microphone on a stand loaded to The Laugh Factory
+S
+
+
+
+#SHOPS
+0
+
+
+
+#MOBPROGS
+#0
+
+#$
