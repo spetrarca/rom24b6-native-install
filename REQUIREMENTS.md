@@ -175,4 +175,4 @@ These are good small-task candidates because they reduce operational friction or
 - How much stock ROM terminology should remain visible to players during the transition?
     - Answer: We're going to play fast and loose with change management, so leave the world state intact
 - Should the first playable target emphasize survival, PVP, exploration, tribal politics, precursor-tech discovery, or builder tooling?
-    - Answer: let's explore Builder tooling 
+    - Answer: let's explore Builder tooling
