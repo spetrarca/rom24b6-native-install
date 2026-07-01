@@ -71,17 +71,28 @@ That enables `rom24-quickmud-restart.timer`, which restarts the game daily at
 `10:00 UTC` to clear transient world state such as shop inventory and loose
 objects.
 
-To update an existing VM checkout without a full redeploy:
+To update the Azure VM without a full redeploy, run this from an authenticated
+local checkout:
+
+```sh
+./deploy-to-vm.sh
+```
+
+The deploy helper exports the committed Git tree, syncs it to
+`/opt/rom24-quickmud`, rebuilds `area/rom` on the VM, and restarts the systemd
+service. It preserves runtime data in `player/`, `gods/`, and `log/`.
+
+For a host that already has GitHub access configured, the VM can update itself:
 
 ```sh
 ROM_DEPLOY_REMOTE_URL=git@github.com:spetr86/sturdy-spoon.git ./deploy-rom24b6.sh
 ```
 
-The deploy helper fetches the configured branch, fast-forwards the checkout,
-rebuilds `area/rom`, and restarts the systemd service. It preserves runtime data
-in `player/`, `gods/`, and `log/`, and it does not run `git clean` or
-`git reset --hard`. If builders have changed tracked area files directly on the
-VM, commit and push those changes before deploying.
+The in-VM deploy helper fetches the configured branch, fast-forwards the
+checkout, rebuilds `area/rom`, and restarts the systemd service. It also
+preserves runtime data and does not run `git clean` or `git reset --hard`. If
+builders have changed tracked area files directly on the VM, commit and push
+those changes before deploying.
 
 ## First Immortal
 
