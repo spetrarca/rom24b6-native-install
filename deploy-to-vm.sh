@@ -41,6 +41,7 @@ rsync_tree() {
   if [[ "$LOCAL_TARGET" == "1" ]]; then
     mkdir -p "$TARGET_ROOT"
     rsync -a --delete \
+      --exclude='.git/' \
       --exclude='player/' \
       --exclude='gods/' \
       --exclude='log/' \
@@ -49,6 +50,7 @@ rsync_tree() {
       "$source"/ "$TARGET_ROOT"/
   else
     rsync -az --delete \
+      --exclude='.git/' \
       --exclude='player/' \
       --exclude='gods/' \
       --exclude='log/' \
