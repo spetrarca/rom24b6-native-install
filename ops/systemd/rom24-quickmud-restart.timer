@@ -1,0 +1,11 @@
+[Unit]
+Description=Nightly QuickMUD / ROM 2.4b6 restart
+
+[Timer]
+OnCalendar=*-*-* 10:00:00
+AccuracySec=1min
+Persistent=false
+Unit=rom24-quickmud-restart.service
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,19 @@
+[Unit]
+Description=QuickMUD / ROM 2.4b6
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=rom
+Group=rom
+WorkingDirectory=/opt/rom24-quickmud/area
+ExecStart=/opt/rom24-quickmud/area/rom 4000
+Restart=on-failure
+RestartSec=10
+StandardOutput=append:/opt/rom24-quickmud/log/rom-systemd.log
+StandardError=append:/opt/rom24-quickmud/log/rom-systemd.log
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

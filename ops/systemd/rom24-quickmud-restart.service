@@ -1,0 +1,8 @@
+[Unit]
+Description=Restart QuickMUD / ROM 2.4b6
+Wants=rom24-quickmud.service
+After=rom24-quickmud.service
+
+[Service]
+Type=oneshot
+ExecStart=/bin/systemctl restart rom24-quickmud.service

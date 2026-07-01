@@ -58,6 +58,31 @@ logs to `log/rom.log`.
 For an Azure VM, also open TCP `4000` in the VM network security group and use a
 non-root Linux user to run the game.
 
+## VM Operations
+
+The Azure VM runs the game through `rom24-quickmud.service`. Repo-owned systemd
+unit files live in `ops/systemd/`. To install or refresh them on the VM:
+
+```sh
+sudo ./ops/systemd/install-rom24-systemd.sh
+```
+
+That enables `rom24-quickmud-restart.timer`, which restarts the game daily at
+`10:00 UTC` to clear transient world state such as shop inventory and loose
+objects.
+
+To update an existing VM checkout without a full redeploy:
+
+```sh
+ROM_DEPLOY_REMOTE_URL=git@github.com:spetr86/sturdy-spoon.git ./deploy-rom24b6.sh
+```
+
+The deploy helper fetches the configured branch, fast-forwards the checkout,
+rebuilds `area/rom`, and restarts the systemd service. It preserves runtime data
+in `player/`, `gods/`, and `log/`, and it does not run `git clean` or
+`git reset --hard`. If builders have changed tracked area files directly on the
+VM, commit and push those changes before deploying.
+
 ## First Immortal
 
 This repo does not ship with a default player credential.
