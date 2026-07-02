@@ -1,122 +1,242 @@
-Merc Release 2.1
-Sunday 01 August 1993
+QuickMUD Class Notes
+====================
 
-Furey	mec@shell.portal.com
-Hatchet	hatchet@uclink.berkeley.edu
-Kahn	michael@uclink.berkeley.edu
+This file documents the current QuickMUD / ROM 2.4b6 class system. It replaces
+older Merc-era assumptions that no longer match this source tree. For a deeper
+combat-focused analysis, see:
+
+    docs/class-combat-notes.md
 
 
+Current Classes
+---------------
 
-=== Classes
+The player class count is controlled by MAX_CLASS in src/merc.h. The current
+value is 4.
 
-The central organizing table for classes is class_table, which is an array of
-type 'struct class_type' (defined in 'merc.h') and is defined in 'const.c'.
-Mobs have class 0, and players have classes 0 through MAX_CLASS-1.
+The four current player classes are defined in class_table in src/const.c:
+
+    mage     prime INT  first weapon dagger  THAC0 20 ->  6  HP  6-8   mana yes
+    cleric   prime WIS  first weapon mace    THAC0 20 ->  2  HP  7-10  mana yes
+    thief    prime DEX  first weapon dagger  THAC0 20 -> -4  HP  8-13  mana no
+    warrior  prime STR  first weapon sword   THAC0 20 -> -10 HP 11-15  mana no
+
+All four classes currently have skill_adept set to 75, so the maximum practiced
+skill percentage is not presently class-specific.
+
+
+class_table
+-----------
+
+The central organizing table for PC classes is class_table, an array of struct
+class_type. The structure is defined in src/merc.h and the data is defined in
+src/const.c.
 
 The fields of class_table are:
 
-    char *	who_name;
+    char *name;
 
-	This three-letter name is used for the 'who' listing.  It's also used
-	for the list of classes shown to new characters for selecting a class,
-	and for matching the player's input in selecting a class.
+        The full player-facing class name.
 
-    sh_int	attr_prime;
+    char who_name[4];
 
-	This attribute is initialized to 16 for new chars of this class.  It
-	costs only three practices to train one's prime attribute, versus five
-	practices for any other attribute.  In addition, characters may
-	increase their prime attribute (only) over 18 by using magic items.
+        The three-letter class abbreviation used in who listings and other
+        compact displays.
 
-    sh_int	weapon;
+    sh_int attr_prime;
 
-	This object (vnum) is given to new characters of this class for their
-	first weapon.
+        The class's prime stat. At first login, a new level-0 character gets
+        +3 to this stat. Prime stats also receive higher effective and trainable
+        caps through get_curr_stat() and get_max_train().
 
-    sh_int	guild;
+        Older documentation claimed prime stats were cheaper to train. That is
+        not true in this tree: do_train() initializes cost to 1 and does not
+        raise the cost for non-prime stats.
 
-	This room (vnum) is off limits to characters of other classes.
+    sh_int weapon;
 
-    sh_int	skill_adept;
+        The legacy/intended first weapon object vnum. Current new-character
+        outfitting is more indirect: do_outfit() chooses a school weapon from
+        the character's highest known weapon skill.
 
-	This is the maximum level to which a character of this class may train
-	a skill or spell.
+    sh_int guild[MAX_GUILD];
 
-    sh_int	thac0_00;		/* Thac0 for level  0		*/
-    sh_int	thac0_32;		/* Thac0 for level 32		*/
+        Guild room vnums. act_move.c blocks characters from entering guild
+        rooms belonging to other classes.
 
-	These are thac0's (To Hit Armor Class 0) for a level 0 character and a
-	level 32 character of this class.  Thac0 for any particular level is
-	computed by linear interpolation.
+    sh_int skill_adept;
 
-    sh_int	hp_min;			/* Min hp gained on leveling	*/
-    sh_int	hp_max;			/* Max hp gained on leveling	*/
-    bool	fMana;			/* Class gains mana on level	*/
+        The maximum percentage a PC of this class can reach by practicing a
+        skill or spell. Currently all classes use 75.
 
-	The fields hp_min and hp_max are the minimum and maximum hit points
-	gained on advancing a level (in addition to the constitution bonus).
-	If fMana is true, than the class gains mana when leveling.
+    sh_int thac0_00;
+    sh_int thac0_32;
 
+        The class's melee accuracy curve. one_hit() interpolates between these
+        values by level, then compresses very good negative THAC0 values. These
+        values are one of the main direct ways class affects combat.
 
+    sh_int hp_min;
+    sh_int hp_max;
 
-=== Other class-specific tables
+        The class's hit point gain range on level-up, before constitution and
+        other advancement modifiers. hp_max also affects passive hit point
+        regeneration for PCs.
 
-(1) In const.c, skill_table contains the level needed for each class to use a
-    particular skill or spell.  If the class cannot use that skill or spell,
-    the level needed is set to 37, so that immortals (angels and above) can use
-    it.  This table is indexed first by sn (skill/spell number) and then by
-    class.
+    bool fMana;
 
-(2) In const.c, title_table contains the titles, indexed by class, then by
-    level, then by sex.  There are two titles for each class at each level.
+        Whether the class is treated as a full mana/spell class. This affects
+        mana gain, spell save odds, and spell cast level. Non-mana classes can
+        still know spells if tables grant them, but they cast at three-quarters
+        level in do_cast().
 
-(3) In act_comm.c, pose_table contains the pose messages, indexed first by
-    level, and then by class.  There are two messages for each class at each
-    level, up to a certain maximum (where we got tired of writing messages).
+    char *base_group;
+    char *default_group;
 
-
-
-
-=== Adding a new class
-
-Here's how to add a new class:
-
-(1) Increment 'MAX_CLASS' in 'merc.h'
-
-(2) Add a new entry to 'class_table' in 'const.c'.
-
-(3) Add sn level numbers to 'skill_table' in 'const.c' for the new class.  Set
-    the level to 37 for all skills or spells which the class is unable to use.
-
-(4) Add an entire new block of titles to 'title_table' in 'const.c'.
-
-(5) Add new lines to 'pose_table' in act_comm.c.  You need two lines at each
-    level for that class.  To keep the 'pose' messages from looking like
-    'emote' messages, avoid putting the name of the character (the '$n'
-    construct) at the beginning of the line.
+        Skill groups granted during creation. base_group is always added with
+        rom basics. default_group is added when the player skips customization
+        and is also used for older player-file skill initialization.
 
 
+Other Class-Specific Tables
+---------------------------
+
+pc_race_table in src/const.c:
+
+    Each PC race has class_mult[MAX_CLASS]. This changes experience per level
+    for each race/class pair.
+
+skill_table in src/const.c:
+
+    Each skill and spell has skill_level[MAX_CLASS] and rating[MAX_CLASS].
+
+    skill_level controls when each class may use the skill or spell. In this
+    source tree, unavailable mortal skills are usually set to level 53, not the
+    older Merc value 37.
+
+    rating controls availability and learning cost. A rating below 1 means the
+    class cannot buy/gain that skill normally. Positive ratings affect creation
+    point cost, train cost through gain, practice speed, and natural improvement
+    chance.
+
+group_table in src/const.c:
+
+    Each skill/spell group has rating[MAX_CLASS]. Group ratings control whether
+    a class can select or gain the group and how many creation/train points it
+    costs.
+
+title_table in src/const.c:
+
+    Titles are indexed by class, level, and sex. Adding or removing a class
+    requires keeping this table in sync.
+
+pose_table in src/act_comm.c:
+
+    Pose messages are indexed by level and by class. Each pose entry contains
+    two messages per class: one for the actor and one for the room.
 
 
-=== Immortal Levels
+Class Effects On Combat
+-----------------------
 
-Here are the immortal levels:
+Class affects combat through several layers:
 
-36	Hero	This is the highest level ordinary players can reach by
-		accumulating experience points.  Heros and heroines can
-		participate in 'immtalk' and read notes addressed to
-		'immortal'.  They no longer receive experience points.
+    Direct combat math:
+        class_table supplies PC THAC0 endpoints used by one_hit().
 
-37	Angel	Immortals at this level can observe most aspects of the game,
-		but have very few active commands.  One command they do have
-		is 'switch' so that they can help run quests.
+    Growth:
+        class_table supplies prime stat, HP gain, mana behavior, and practice
+        cap. Prime stats feed combat through STR hitroll/damroll, DEX armor
+        class and combat-command formulas, CON hit points/regeneration, WIS
+        practices, and INT learning.
 
-38	Deity	Immortals at this level have all the commands needed to affect
-		game elements within the game, such as 'mload', 'mset',
-		'oload', and 'oset'.
+    Access:
+        skill_table and group_table determine which combat skills, weapon
+        skills, defenses, and spells a class gets, when they are available, and
+        how quickly or cheaply they improve.
 
-39	Supreme	Immortals at this level have site and connection level
-		commands, such as 'reboot' and 'shutdown'.  In fact, this level
-		has access to all immortal commands except 'advance'.
+    Defaults:
+        base_group and default_group shape the starting build before the player
+        has made many choices.
 
-40	God	Immortals at this level have 'advance'.
+Examples from the current tables:
+
+    Warriors have the best THAC0, best HP gain, early parry, shield block,
+    bash, enhanced damage, rescue, second attack, and third attack.
+
+    Thieves have the second-best THAC0, early backstab, dodge, trip, second
+    attack, and stealth/utility skills.
+
+    Clerics are full mana classes with medium THAC0/HP, shield block, healing,
+    support magic, and some combat spells/skills.
+
+    Mages are full mana classes with the weakest THAC0 and HP gain, but broad
+    spell access.
+
+
+NPC Class-Like Behavior
+-----------------------
+
+NPCs do not use PC class_table as their main class system.
+
+Builders give mobs class-like behavior with act flags such as cleric, mage,
+thief, and warrior, plus offensive flags such as bash, berserk, disarm, dodge,
+fast, kick, parry, and trip.
+
+New-format mobs receive stat adjustments from ACT_WARRIOR, ACT_THIEF,
+ACT_CLERIC, and ACT_MAGE in db.c. one_hit() also uses these act flags to choose
+NPC THAC0 endpoints. NPC skill percentages come from get_skill() formulas based
+on level and flags, not from PC learned skill arrays.
+
+This matters for class redesign: changing player classes will not automatically
+change mob behavior unless the mob flag model, OLC, and builder docs are also
+updated.
+
+
+Adding Or Changing A Class
+--------------------------
+
+Class changes are table-wide changes. Before editing, decide whether existing
+player files must migrate. Early QuickMUD planning currently allows player files
+to be wiped later, which makes larger class changes easier than a live migration.
+
+Checklist for adding a new class:
+
+1. Increment MAX_CLASS in src/merc.h.
+
+2. Add a class_table entry in src/const.c.
+
+3. Add one class value to every pc_race_table class_mult array.
+
+4. Add one class value to every skill_table skill_level array.
+
+5. Add one class value to every skill_table rating array.
+
+6. Add one class value to every group_table rating array.
+
+7. Add a full title_table block for the new class.
+
+8. Add two pose_table messages per pose level for the new class.
+
+9. Decide base_group and default_group membership, including weapon basics and
+   any default combat package.
+
+10. Update creation, help, player-facing docs, builder docs, and any tests or
+    scripts that assume four classes.
+
+11. Audit NPC builder behavior separately. PC classes and NPC act/offensive
+    flags are related concepts, but they are not the same data path.
+
+
+Known Current Stale References
+------------------------------
+
+Some inherited Merc/ROM docs may still describe older behavior. In this source
+tree:
+
+    - Unavailable mortal skills are usually represented with level 53, not 37.
+    - Prime stats are not cheaper to train in do_train().
+    - Starting equipment follows known weapon skill in do_outfit(), not only
+      class_table.weapon.
+    - Mobs are better understood through act/offensive flags than through PC
+      class_table.

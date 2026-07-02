@@ -1,5 +1,8 @@
 # Summoning Notes
 
+Related backlog: [[requirements|QuickMUD Requirements Backlog]].
+Design questions: [[design-questions]].
+
 These notes summarize current summon and nearby transport-spell behavior from
 the QuickMUD / ROM 2.4b6 source. They describe current behavior only; they are
 not a redesign proposal.
@@ -108,9 +111,9 @@ The current help text documents only one failure rule: fighting characters may
 not be summoned. The source has many more restrictions, all hidden behind the
 same generic failure message.
 
-The existing backlog item to improve summon failure messages is well aligned
-with the current source. A low-risk implementation would preserve the current
-rules but split the long guard clause into named checks that return specific
-messages for cases such as target not found, target fighting, room restriction,
-target too powerful, `nosummon`, summon-immune NPC, aggressive NPC, shopkeeper,
-and saving throw.
+The existing [[requirements|backlog item]] to improve summon failure messages is
+well aligned with the current source. A low-risk implementation would preserve
+the current rules but split the long guard clause into named checks that return
+specific messages for cases such as target not found, target fighting, room
+restriction, target too powerful, `nosummon`, summon-immune NPC, aggressive NPC,
+shopkeeper, and saving throw.

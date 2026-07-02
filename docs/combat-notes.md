@@ -1,5 +1,8 @@
 # Combat Notes
 
+Related backlog: [[requirements|QuickMUD Requirements Backlog]].
+Design questions: [[design-questions]].
+
 These notes summarize the current QuickMUD / ROM 2.4b6 combat flow from the
 source. They describe current behavior only; they are not a redesign proposal.
 
@@ -71,7 +74,11 @@ The function:
 4. Computes THAC0 from class or NPC role.
 5. Applies hitroll and weapon skill adjustments.
 6. Chooses the victim AC bucket based on damage type.
-7. Rolls a 0-19 die. A 0 misses, and a 19 is treated as a high roll.
+7. Applies visibility and victim-position AC adjustments.
+8. Rolls a 0-19 die. A 0 always misses, and a 19 bypasses the normal threshold
+   check.
+9. If the THAC0 roll succeeds, `damage()` may still stop the swing with parry,
+   dodge, or shield block.
 
 Relevant references:
 
@@ -80,9 +87,17 @@ Relevant references:
 - `src/handler.c:450` maps wielded weapon types to weapon skills.
 - `src/handler.c:492` computes weapon skill.
 - `src/merc.h:2104` defines AC, hitroll, and damroll macros.
+- `src/fight.c:793` runs parry, dodge, and shield block after a weapon-like hit
+  passes the THAC0 roll.
 
 Current class THAC0 values make warriors the strongest melee attackers, then
 thieves, clerics, and mages.
+
+For classless combat design, the main open question is whether a new
+weapon-skill-centered formula replaces only the THAC0 gate or also absorbs
+parry, dodge, and shield block. Today those active defenses happen after a
+successful THAC0 roll, so final landed-hit chance can be much lower than the
+main hit roll suggests.
 
 ## Damage Calculation
 
