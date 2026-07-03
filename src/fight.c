@@ -683,12 +683,125 @@ void one_hit (CHAR_DATA * ch, CHAR_DATA * victim, int dt)
 
 
 /*
+ * Finish a death using the standard damage death presentation and aftermath.
+ */
+bool finish_death (CHAR_DATA * ch, CHAR_DATA * victim)
+{
+    OBJ_DATA *corpse;
+
+    if (ch == NULL)
+        ch = victim;
+
+    victim->position = POS_DEAD;
+    act ("{R$n is DEAD!!{x", victim, 0, 0, TO_ROOM);
+    send_to_char ("{RYou have been KILLED!!{x\n\r\n\r", victim);
+
+    if (!IS_AWAKE (victim))
+        stop_fighting (victim, FALSE);
+
+    group_gain (ch, victim);
+
+    if (!IS_NPC (victim))
+    {
+        sprintf (log_buf, "%s killed by %s at %d",
+                 victim->name,
+                 (IS_NPC (ch) ? ch->short_descr : ch->name),
+                 ch->in_room->vnum);
+        log_string (log_buf);
+
+        /*
+         * Dying penalty:
+         * 2/3 way back to previous level.
+         */
+        if (victim->exp > exp_per_level (victim, victim->pcdata->points)
+            * victim->level)
+            gain_exp (victim,
+                      (2 *
+                       (exp_per_level (victim, victim->pcdata->points) *
+                        victim->level - victim->exp) / 3) + 50);
+    }
+
+    sprintf (log_buf, "%s got toasted by %s at %s [room %d]",
+             (IS_NPC (victim) ? victim->short_descr : victim->name),
+             (IS_NPC (ch) ? ch->short_descr : ch->name),
+             ch->in_room->name, ch->in_room->vnum);
+
+    if (IS_NPC (victim))
+        wiznet (log_buf, NULL, NULL, WIZ_MOBDEATHS, 0, 0);
+    else
+        wiznet (log_buf, NULL, NULL, WIZ_DEATHS, 0, 0);
+
+    /*
+     * Death trigger
+     */
+    if (IS_NPC (victim) && HAS_TRIGGER (victim, TRIG_DEATH))
+    {
+        victim->position = POS_STANDING;
+        mp_percent_trigger (victim, ch, NULL, NULL, TRIG_DEATH);
+    }
+
+    raw_kill (victim);
+    /* dump the flags */
+    if (ch != victim && !IS_NPC (ch) && !is_same_clan (ch, victim))
+    {
+        if (IS_SET (victim->act, PLR_KILLER))
+            REMOVE_BIT (victim->act, PLR_KILLER);
+        else
+            REMOVE_BIT (victim->act, PLR_THIEF);
+    }
+
+    /* RT new auto commands */
+
+    if (ch != victim
+        && !IS_NPC (ch)
+        && (corpse =
+            get_obj_list (ch, "corpse", ch->in_room->contents)) != NULL
+        && corpse->item_type == ITEM_CORPSE_NPC
+        && can_see_obj (ch, corpse))
+    {
+        OBJ_DATA *coins;
+
+        corpse = get_obj_list (ch, "corpse", ch->in_room->contents);
+
+        if (IS_SET (ch->act, PLR_AUTOLOOT) && corpse && corpse->contains)
+        {                    /* exists and not empty */
+            do_function (ch, &do_get, "all corpse");
+        }
+
+        if (IS_SET (ch->act, PLR_AUTOGOLD) && corpse && corpse->contains &&    /* exists and not empty */
+            !IS_SET (ch->act, PLR_AUTOLOOT))
+        {
+            if ((coins = get_obj_list (ch, "gcash", corpse->contains))
+                != NULL)
+            {
+                do_function (ch, &do_get, "all.gcash corpse");
+            }
+        }
+
+        if (IS_SET (ch->act, PLR_AUTOSAC))
+        {
+            if (IS_SET (ch->act, PLR_AUTOLOOT) && corpse
+                && corpse->contains)
+            {
+                return TRUE;    /* leave if corpse has treasure */
+            }
+            else
+            {
+                do_function (ch, &do_sacrifice, "corpse");
+            }
+        }
+    }
+
+    return TRUE;
+}
+
+
+/*
  * Inflict damage from a hit.
  */
 bool damage (CHAR_DATA * ch, CHAR_DATA * victim, int dam, int dt,
              int dam_type, bool show)
 {
-    OBJ_DATA *corpse;
     bool immune;
 
     if (victim->position == POS_DEAD)
@@ -857,9 +970,7 @@ bool damage (CHAR_DATA * ch, CHAR_DATA * victim, int dam, int dt,
             break;
 
         case POS_DEAD:
-            act ("{R$n is DEAD!!{x", victim, 0, 0, TO_ROOM);
-            send_to_char ("{RYou have been KILLED!!{x\n\r\n\r", victim);
-            break;
+            return finish_death (ch, victim);
 
         default:
             if (dam > victim->max_hit / 4)
@@ -874,106 +985,6 @@ bool damage (CHAR_DATA * ch, CHAR_DATA * victim, int dam, int dt,
      */
     if (!IS_AWAKE (victim))
         stop_fighting (victim, FALSE);
-
-    /*
-     * Payoff for killing things.
-     */
-    if (victim->position == POS_DEAD)
-    {
-        group_gain (ch, victim);
-
-        if (!IS_NPC (victim))
-        {
-            sprintf (log_buf, "%s killed by %s at %d",
-                     victim->name,
-                     (IS_NPC (ch) ? ch->short_descr : ch->name),
-                     ch->in_room->vnum);
-            log_string (log_buf);
-
-            /*
-             * Dying penalty:
-             * 2/3 way back to previous level.
-             */
-            if (victim->exp > exp_per_level (victim, victim->pcdata->points)
-                * victim->level)
-                gain_exp (victim,
-                          (2 *
-                           (exp_per_level (victim, victim->pcdata->points) *
-                            victim->level - victim->exp) / 3) + 50);
-        }
-
-        sprintf (log_buf, "%s got toasted by %s at %s [room %d]",
-                 (IS_NPC (victim) ? victim->short_descr : victim->name),
-                 (IS_NPC (ch) ? ch->short_descr : ch->name),
-                 ch->in_room->name, ch->in_room->vnum);
-
-        if (IS_NPC (victim))
-            wiznet (log_buf, NULL, NULL, WIZ_MOBDEATHS, 0, 0);
-        else
-            wiznet (log_buf, NULL, NULL, WIZ_DEATHS, 0, 0);
-
-        /*
-         * Death trigger
-         */
-        if (IS_NPC (victim) && HAS_TRIGGER (victim, TRIG_DEATH))
-        {
-            victim->position = POS_STANDING;
-            mp_percent_trigger (victim, ch, NULL, NULL, TRIG_DEATH);
-        }
-
-        raw_kill (victim);
-        /* dump the flags */
-        if (ch != victim && !IS_NPC (ch) && !is_same_clan (ch, victim))
-        {
-            if (IS_SET (victim->act, PLR_KILLER))
-                REMOVE_BIT (victim->act, PLR_KILLER);
-            else
-                REMOVE_BIT (victim->act, PLR_THIEF);
-        }
-
-        /* RT new auto commands */
-
-        if (!IS_NPC (ch)
-            && (corpse =
-                get_obj_list (ch, "corpse", ch->in_room->contents)) != NULL
-            && corpse->item_type == ITEM_CORPSE_NPC
-            && can_see_obj (ch, corpse))
-        {
-            OBJ_DATA *coins;
-
-            corpse = get_obj_list (ch, "corpse", ch->in_room->contents);
-
-            if (IS_SET (ch->act, PLR_AUTOLOOT) && corpse && corpse->contains)
-            {                    /* exists and not empty */
-                do_function (ch, &do_get, "all corpse");
-            }
-
-            if (IS_SET (ch->act, PLR_AUTOGOLD) && corpse && corpse->contains &&    /* exists and not empty */
-                !IS_SET (ch->act, PLR_AUTOLOOT))
-            {
-                if ((coins = get_obj_list (ch, "gcash", corpse->contains))
-                    != NULL)
-                {
-                    do_function (ch, &do_get, "all.gcash corpse");
-                }
-            }
-
-            if (IS_SET (ch->act, PLR_AUTOSAC))
-            {
-                if (IS_SET (ch->act, PLR_AUTOLOOT) && corpse
-                    && corpse->contains)
-                {
-                    return TRUE;    /* leave if corpse has treasure */
-                }
-                else
-                {
-                    do_function (ch, &do_sacrifice, "corpse");
-                }
-            }
-        }
-
-        return TRUE;
-    }
 
     if (victim == ch)
         return TRUE;

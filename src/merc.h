@@ -2486,6 +2486,7 @@ bool    damage        args( ( CHAR_DATA *ch, CHAR_DATA *victim, int dam,
                     int dt, int class, bool show ) );
 bool    damage_old      args( ( CHAR_DATA *ch, CHAR_DATA *victim, int dam,
                                 int dt, int class, bool show ) );
+bool    finish_death    args( ( CHAR_DATA *ch, CHAR_DATA *victim ) );
 void    update_pos    args( ( CHAR_DATA *victim ) );
 void    stop_fighting    args( ( CHAR_DATA *ch, bool fBoth ) );
 void    check_killer    args( ( CHAR_DATA *ch, CHAR_DATA *victim) );
@@ -2727,4 +2728,3 @@ extern        char  str_empty [1];
 extern        MOB_INDEX_DATA  *    mob_index_hash  [MAX_KEY_HASH];
 extern        OBJ_INDEX_DATA  *    obj_index_hash  [MAX_KEY_HASH];
 extern        ROOM_INDEX_DATA *    room_index_hash [MAX_KEY_HASH];
-

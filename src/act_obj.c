@@ -47,7 +47,6 @@
 #define OD OBJ_DATA
 bool remove_obj args ((CHAR_DATA * ch, int iWear, bool fReplace));
 void wear_obj args ((CHAR_DATA * ch, OBJ_DATA * obj, bool fReplace));
-void raw_kill args ((CHAR_DATA * victim));
 CD *find_keeper args ((CHAR_DATA * ch));
 int get_cost args ((CHAR_DATA * keeper, OBJ_DATA * obj, bool fBuy));
 void obj_to_keeper args ((OBJ_DATA * obj, CHAR_DATA * ch));
@@ -102,15 +101,12 @@ static bool pay_magical_item_hp_cost (CHAR_DATA * ch, OBJ_DATA * obj)
 
     hp_cost = magical_item_hp_cost (ch, obj);
     ch->hit -= hp_cost;
+    act ("$p draws on your life.", ch, obj, NULL, TO_CHAR);
 
     if (ch->hit > 0)
-    {
-        act ("$p draws on your life.", ch, obj, NULL, TO_CHAR);
         return TRUE;
-    }
 
-    act ("$p drains the last of your life.", ch, obj, NULL, TO_CHAR);
-    act ("$p drains the last of $n's life.", ch, obj, NULL, TO_ROOM);
+    act ("$p draws on $n's life.", ch, obj, NULL, TO_ROOM);
     return FALSE;
 }
 
@@ -1951,7 +1947,7 @@ void do_recite (CHAR_DATA * ch, char *argument)
     if (!pay_magical_item_hp_cost (ch, scroll))
     {
         extract_obj (scroll);
-        raw_kill (ch);
+        finish_death (ch, ch);
         return;
     }
 
@@ -2011,7 +2007,7 @@ void do_brandish (CHAR_DATA * ch, char *argument)
         {
             if (--staff->value[2] <= 0)
                 extract_obj (staff);
-            raw_kill (ch);
+            finish_death (ch, ch);
             return;
         }
 
@@ -2141,7 +2137,7 @@ void do_zap (CHAR_DATA * ch, char *argument)
         {
             if (--wand->value[2] <= 0)
                 extract_obj (wand);
-            raw_kill (ch);
+            finish_death (ch, ch);
             return;
         }
 
