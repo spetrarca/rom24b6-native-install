@@ -3738,7 +3738,7 @@ void spell_locate_object (int sn, int level, CHAR_DATA * ch, void *vo,
     {
         if (!can_see_obj (ch, obj) || !is_name (target_name, obj->name)
             || IS_OBJ_STAT (obj, ITEM_NOLOCATE)
-            || number_percent () > 2 * level || ch->level < obj->level)
+            || number_percent () > 2 * level)
             continue;
 
         found = TRUE;

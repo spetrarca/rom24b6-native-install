@@ -37,6 +37,7 @@ This document captures early planning requirements for the QuickMUD / ROM 2.4b6 
 - **Investigate:** The current behavior or code path is unclear and must be verified first.
 - **Design needed:** The goal is known, but the details affect balance, content, persistence, or several systems.
 - **Deferred:** Keep the idea, but do not plan it until related decisions are made.
+- **Closed:** The item has been decided against or is no longer needed.
 
 ## Small Requirements
 
@@ -44,7 +45,7 @@ This document captures early planning requirements for the QuickMUD / ROM 2.4b6 
 
 | Item | Status | Notes |
 | --- | --- | --- |
-| Add a second MUD instance for testing/building on another port | Design needed | Useful for builders and risky mechanic testing. Need decide port, data isolation, copy strategy, and whether it runs continuously. |
+| Add a second MUD instance for testing/building on another port | Closed | Decision: maintain one live version only. Do not plan a second builder/test instance. |
 | Verify nightly or semi-nightly reboots | Investigate | First verify whether they already happen. If not, add scheduled reboots or copyovers to clear shops, litter, and stale world state. |
 | Replace login screen | Ready to define | Should reflect the low-fantasy post-apocalyptic structure setting. Low code risk unless login flow behavior changes. |
 
@@ -64,10 +65,10 @@ This document captures early planning requirements for the QuickMUD / ROM 2.4b6 
 
 | Item | Status | Notes |
 | --- | --- | --- |
-| Remove minimum levels on existing gear | Design needed | Could be done by bulk editing area data, changing code checks, or both. |
-| Bulk edit existing items | Investigate | Identify item level fields across area files and whether automated edits are safe. |
-| Remove or comment out level checks for use/equip | Investigate | Locate all checks for wearing, holding, using, and invoking item effects. |
-| Build future gear for level 1 | Ready to define | Content convention once code/data policy is chosen. |
+| Remove minimum levels on existing gear | Ready to define | Decision: remove player-facing level gates while keeping object level as builder/spell/cost/potency metadata. Do not bulk-set existing object levels to 1 as the main policy. |
+| Bulk edit existing items | Deferred | Do not bulk edit existing item levels for the gate-removal pass. Revisit only if later builder cleanup needs data normalization. |
+| Remove or comment out level checks for use/equip | Ready to define | Implementation target for item level policy. Remove level gates from player wear/wield/hold, potion use, scroll/staff/wand use, shop purchase, stealing, donation pit retrieval, locate-object visibility, and save filtering. Scrolls, staves, and wands should cost current HP instead of being level-gated, starting with `1 + max(0, item level - player level)` HP per use; this cost can kill the user. Potions are exempt from HP item-use cost. Preserve object level calculations for conversion, spell power metadata, dispel resistance, heat metal, enchantment, identify/stat output, and OLC. |
+| Build future gear for level 1 | Ready to define | Content convention: future mundane gear may use level 1 for builder clarity, but object level remains available as potency metadata where spells, old-format conversion, or special object behavior need it. |
 | Add face equipment slot for masks, armor, and clothing | Design needed | Known references: `src/merc.h` around lines 1134 and 1336. Need audit wear locations, body/slot tables, save/load, display, OLC, and area files. |
 | Selective equipment durability with optional tag | Deferred | Keep until the original purpose is remembered and durability goals are clearer. |
 
@@ -77,9 +78,9 @@ This document captures early planning requirements for the QuickMUD / ROM 2.4b6 
 | --- | --- | --- |
 | Remove alignment | Design needed | Desired direction is to get rid of alignment altogether. Need audit class restrictions, spells, item flags, mobs, help text, score output, area content, and mob kill effects. |
 | Remove movement points | Design needed | Need identify movement costs, regeneration, UI displays, commands, combat effects, and balance implications. |
-| Fold spear into polearm | Design needed | Map existing weapon skills, item types, skill names, help text, and player data compatibility. |
-| Fold flail into mace | Design needed | Same concerns as spear/polearm consolidation. |
-| Widen group spread with no limit | Design needed | Need understand current group level checks and decide whether there should be XP or abuse side effects. |
+| Fold spear into polearm | Ready to define | Design direction is clear: map legacy spear/staff weapon type and skill to polearm for player progression, while preserving compatibility aliases/migration for area data, OLC, school weapons, help text, and existing player learned values. |
+| Fold flail into mace | Ready to define | Design direction is clear: map legacy flail weapon type and skill to mace for player progression, while preserving compatibility aliases/migration for area data, OLC, help text, and existing player learned values. |
+| Widen group spread with no limit | Ready to define | Light code read found the old +/-5 group XP gate already commented out in `group_gain`. Small spec should verify behavior in-game, preserve no-limit grouping, document XP split behavior, and remove dead warnings if desired. |
 
 ### Hunger and Survival
 
@@ -94,10 +95,10 @@ This document captures early planning requirements for the QuickMUD / ROM 2.4b6 
 
 | Item | Status | Notes |
 | --- | --- | --- |
-| Add asymmetrical PVP level range | Design needed | Players can attack any target above their own level, but only targets up to 10 levels below. Need exact attacker/victim checks, group behavior, safe rooms, and immortals. |
+| Add asymmetrical PVP level range | Ready to define | Core range is clear: players can attack any target above their own level, but only targets up to 10 levels below. Existing code blocks attacks more than 8 levels down and requires clans; small spec should implement the range rule while preserving immortal and safe-room protections until broader PVP policy changes. |
 | Allow smurfing | Ready to define | Low-level alternate characters are acceptable as a game policy. Mechanics should not try to prevent them unless a later abuse case requires it. |
-| Full player loot | Design needed | A player who dies for any reason leaves a corpse that anyone can loot. Need define corpse ownership, decay, retrieval, room safety, and edge cases. |
-| Death drops corpse with all gear | Design needed | Required for full loot. Need decide NPC vs PC behavior, inventory/equipment handling, gold/currency handling, and save interactions. |
+| Full player loot | Ready to define | A player who dies for any reason leaves a corpse that anyone can loot. Current PC corpses can be owner-locked, so small spec should remove PC corpse ownership restrictions and cover `PLR_CANLOOT`, group exceptions, autoloot, corpse decay, and safe-room interactions. |
+| Death drops corpse with all gear | Ready to define | Required for full loot. Code read confirms `make_corpse` already moves most carried/equipped objects into PC corpses, with special handling for inventory-tagged objects, floating items, and currency. Small spec should make all PC deaths use the full gear and money drop policy rather than the current clan-only half-currency behavior. |
 | Less restrictive PVP generally | Design needed | Broader policy around safe rooms, clans/groups, guards, penalties, logging, and newbie protection. |
 
 ### Magic, Lore Skill, and Spell Costs
@@ -105,7 +106,7 @@ This document captures early planning requirements for the QuickMUD / ROM 2.4b6 
 | Item | Status | Notes |
 | --- | --- | --- |
 | Let anyone learn magic | Design needed | Magic should not be mage-only. Need decide how trainers, skill tables, practice, class-removal work, and magic illness interact with spell access. |
-| Replace mana-style spell economy | Design needed | Learning a new spell costs maximum HP, scaled by spell power. Casting spells costs current HP. Spellcasting should not rely on mana, MP, charges, or a separate magic resource. |
+| Replace mana-style spell economy | Design needed | Learning a new spell costs maximum HP, scaled by spell power. Casting spells costs current HP. Scrolls, staves, and wands also cost current HP when used, starting with `1 + max(0, item level - player level)` HP per use; potions do not. Spellcasting should not rely on mana, MP, charges, or a separate magic resource. |
 | Tie magic costs to illness lore | Design needed | Magic is a disease or contamination. Spell learning/casting should reinforce that fiction mechanically. |
 | Fix or implement lore skill | Design needed | After investigation, define lore as a skill that helps identify ancient technology, precursor trinkets, magic disease effects, or related world knowledge. |
 
@@ -139,7 +140,7 @@ This document captures early planning requirements for the QuickMUD / ROM 2.4b6 
 
 | Item | Status | Notes |
 | --- | --- | --- |
-| Human PCs only | Design needed | Need determine whether this removes races from character creation, keeps NPC races, and migrates existing players. |
+| Human PCs only | Ready to define | Design direction is clear enough for a small spec: remove non-human choices from PC creation, keep NPC races for builders/content, and do not plan player-file migration because early development can assume fresh characters when classless progression begins. |
 | Add alternate means of distinguishing PCs | Design needed | Needed if race variety and fixed classes are removed. Could involve tribe, mask, background, culture, origin, faction, education, vocation, illness exposure, precursor knowledge, or starting skill package. |
 | Remove fixed PC classes | Design needed | Desired direction is to go without player classes if feasible. Current classes affect creation, skill/group access, THAC0, HP gain, mana behavior, guild rooms, titles, pose text, and docs. Need decide whether NPC class-like act flags remain as builder archetypes. |
 | Define classless progression model | Design needed | Need define starting choices, practices/trains, skill learning, weapon specialization, magic access, HP growth, prestige/remort hooks, titles, and how old class-indexed tables are replaced or collapsed. |
@@ -163,22 +164,24 @@ This document captures early planning requirements for the QuickMUD / ROM 2.4b6 
 
 These are good small-task candidates because they reduce operational friction or start with investigation instead of risky edits.
 
-1. Second test/build MUD instance.
-2. Nightly reboot verification.
-3. Summon spell investigation report.
-4. Hunger/thirst behavior report.
-5. Lore skill code review and expected behavior proposal.
-6. Classless hit formula design from the THAC0/THAC32 investigation.
-7. Item level policy: data edit, code edit, or combined approach.
-8. Classless player progression sketch.
-9. Login screen replacement.
+1. Item level policy: remove player-facing level gates while retaining object level as potency metadata, with scroll/staff/wand HP costs scaling by item-level versus player-level delta.
+2. Full player loot and death-corpse policy.
+3. No-limit group spread verification and cleanup.
+4. Weapon consolidation compatibility plan: spear into polearm, flail into mace.
+5. Asymmetrical PVP range rule.
+6. Human-only PC creation scope.
+7. Login screen replacement.
+8. Nightly reboot verification.
+9. Summon spell investigation report.
+10. Hunger/thirst behavior report.
+11. Lore skill code review and expected behavior proposal.
 
 ## Cross-Cutting Questions
 
 - Which repository and branch should be treated as canonical for production deployment?
     - Answer: https://github.com/spetr86/sturdy-spoon/
 - Should builder/content changes be tested on a second live port before touching the production MUD?
-    - Answer: Maybe - come back to this later.
+    - Answer: No. Maintain one live version only; do not plan a second builder/test instance.
 - Are player files considered migration targets, or can early development assume fresh characters?
     - Answer: Assume all players will be deleted eventually - this will likely happen around the time we start replacing stock classes with classless progression.
 - Should classless hit chance replace only the THAC0 gate, or absorb active defenses too?

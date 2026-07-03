@@ -540,8 +540,7 @@ void fwrite_obj (CHAR_DATA * ch, OBJ_DATA * obj, FILE * fp, int iNest)
     /*
      * Castrate storage characters.
      */
-    if ((ch->level < obj->level - 2 && obj->item_type != ITEM_CONTAINER)
-        || obj->item_type == ITEM_KEY
+    if (obj->item_type == ITEM_KEY
         || (obj->item_type == ITEM_MAP && !obj->value[0]))
         return;
 
