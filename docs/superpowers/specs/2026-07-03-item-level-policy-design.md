@@ -15,6 +15,21 @@ Remove player-facing object-level gates. Keep object level as potency metadata.
 
 Future mundane gear may use level 1 as a builder convention, but existing object level values remain meaningful for object conversion, magic-item behavior, and builder/operator visibility.
 
+## Implementation Status
+
+Implemented in draft PR `spetr86/sturdy-spoon#1`.
+
+Current verification:
+
+- `tests/item-level-policy.sh`
+- all existing `tests/*.sh` scripts
+- `make -C src`
+- `git diff --check`
+
+Local manual testing server is running from this checkout on port `4000`; connect with `telnet localhost 4000` or `nc localhost 4000`.
+
+SonarQube is not a reliable review gate for this project. The local server can load the community `sonar-cxx` plugin, but the analyzer reports noisy parser results against this legacy ROM C codebase. Use local build/tests and human/code review instead.
+
 ## In Scope
 
 Remove item-level restrictions from:

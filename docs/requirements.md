@@ -34,6 +34,7 @@ This document captures early planning requirements for the QuickMUD / ROM 2.4b6 
 ## Status Legend
 
 - **Ready to define:** The desired direction is clear enough to turn into a small spec.
+- **Complete:** The decision or implementation has landed in the current working plan or PR.
 - **Investigate:** The current behavior or code path is unclear and must be verified first.
 - **Design needed:** The goal is known, but the details affect balance, content, persistence, or several systems.
 - **Deferred:** Keep the idea, but do not plan it until related decisions are made.
@@ -46,6 +47,7 @@ This document captures early planning requirements for the QuickMUD / ROM 2.4b6 
 | Item | Status | Notes |
 | --- | --- | --- |
 | Add a second MUD instance for testing/building on another port | Closed | Decision: maintain one live version only. Do not plan a second builder/test instance. |
+| Run local manual test server | Complete | Local QuickMUD server is running on port `4000` from this checkout for manual testing. Use `telnet localhost 4000` or `nc localhost 4000` to connect. Leave it running unless testing is finished or the server needs a restart. |
 | Verify nightly or semi-nightly reboots | Investigate | First verify whether they already happen. If not, add scheduled reboots or copyovers to clear shops, litter, and stale world state. |
 | Replace login screen | Ready to define | Should reflect the low-fantasy post-apocalyptic structure setting. Low code risk unless login flow behavior changes. |
 
@@ -65,10 +67,10 @@ This document captures early planning requirements for the QuickMUD / ROM 2.4b6 
 
 | Item | Status | Notes |
 | --- | --- | --- |
-| Remove minimum levels on existing gear | Ready to define | Decision: remove player-facing level gates while keeping object level as builder/spell/cost/potency metadata. Do not bulk-set existing object levels to 1 as the main policy. |
+| Remove minimum levels on existing gear | Complete | Implemented in draft PR `spetr86/sturdy-spoon#1`: remove player-facing level gates while keeping object level as builder/spell/cost/potency metadata. Do not bulk-set existing object levels to 1 as the main policy. |
 | Bulk edit existing items | Deferred | Do not bulk edit existing item levels for the gate-removal pass. Revisit only if later builder cleanup needs data normalization. |
-| Remove or comment out level checks for use/equip | Ready to define | Implementation target for item level policy. Remove level gates from player wear/wield/hold, potion use, scroll/staff/wand use, shop purchase, stealing, donation pit retrieval, locate-object visibility, and save filtering. Scrolls, staves, and wands should cost current HP instead of being level-gated, starting with `1 + max(0, item level - player level)` HP per use; this cost can kill the user. Potions are exempt from HP item-use cost. Preserve object level calculations for conversion, spell power metadata, dispel resistance, heat metal, enchantment, identify/stat output, and OLC. |
-| Build future gear for level 1 | Ready to define | Content convention: future mundane gear may use level 1 for builder clarity, but object level remains available as potency metadata where spells, old-format conversion, or special object behavior need it. |
+| Remove or comment out level checks for use/equip | Complete | Implemented in draft PR `spetr86/sturdy-spoon#1`. Removed level gates from player wear/wield/hold, potion use, scroll/staff/wand use, shop purchase, stealing, donation pit retrieval, locate-object visibility, and save filtering. Scrolls, staves, and wands now cost current HP instead of being level-gated, starting with `1 + max(0, item level - player level)` HP per use; this cost can kill the user. Potions are exempt from HP item-use cost. Preserve object level calculations for conversion, spell power metadata, dispel resistance, heat metal, enchantment, identify/stat output, and OLC. |
+| Build future gear for level 1 | Complete | Content convention recorded: future mundane gear may use level 1 for builder clarity, but object level remains available as potency metadata where spells, old-format conversion, or special object behavior need it. |
 | Add face equipment slot for masks, armor, and clothing | Design needed | Known references: `src/merc.h` around lines 1134 and 1336. Need audit wear locations, body/slot tables, save/load, display, OLC, and area files. |
 | Selective equipment durability with optional tag | Deferred | Keep until the original purpose is remembered and durability goals are clearer. |
 
@@ -164,17 +166,16 @@ This document captures early planning requirements for the QuickMUD / ROM 2.4b6 
 
 These are good small-task candidates because they reduce operational friction or start with investigation instead of risky edits.
 
-1. Item level policy: remove player-facing level gates while retaining object level as potency metadata, with scroll/staff/wand HP costs scaling by item-level versus player-level delta.
-2. Full player loot and death-corpse policy.
-3. No-limit group spread verification and cleanup.
-4. Weapon consolidation compatibility plan: spear into polearm, flail into mace.
-5. Asymmetrical PVP range rule.
-6. Human-only PC creation scope.
-7. Login screen replacement.
-8. Nightly reboot verification.
-9. Summon spell investigation report.
-10. Hunger/thirst behavior report.
-11. Lore skill code review and expected behavior proposal.
+1. Full player loot and death-corpse policy.
+2. No-limit group spread verification and cleanup.
+3. Weapon consolidation compatibility plan: spear into polearm, flail into mace.
+4. Asymmetrical PVP range rule.
+5. Human-only PC creation scope.
+6. Login screen replacement.
+7. Nightly reboot verification.
+8. Summon spell investigation report.
+9. Hunger/thirst behavior report.
+10. Lore skill code review and expected behavior proposal.
 
 ## Cross-Cutting Questions
 
@@ -182,6 +183,8 @@ These are good small-task candidates because they reduce operational friction or
     - Answer: https://github.com/spetr86/sturdy-spoon/
 - Should builder/content changes be tested on a second live port before touching the production MUD?
     - Answer: No. Maintain one live version only; do not plan a second builder/test instance.
+- Should SonarQube be used as a required review gate for this project?
+    - Answer: No. Local SonarQube with the community `sonar-cxx` plugin loaded, but it produced unreliable parser results for this legacy ROM C codebase. Use local build/tests and human/code review instead.
 - Are player files considered migration targets, or can early development assume fresh characters?
     - Answer: Assume all players will be deleted eventually - this will likely happen around the time we start replacing stock classes with classless progression.
 - Should classless hit chance replace only the THAC0 gate, or absorb active defenses too?
