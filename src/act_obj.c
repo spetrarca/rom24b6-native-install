@@ -47,11 +47,14 @@
 #define OD OBJ_DATA
 bool remove_obj args ((CHAR_DATA * ch, int iWear, bool fReplace));
 void wear_obj args ((CHAR_DATA * ch, OBJ_DATA * obj, bool fReplace));
+void raw_kill args ((CHAR_DATA * victim));
 CD *find_keeper args ((CHAR_DATA * ch));
 int get_cost args ((CHAR_DATA * keeper, OBJ_DATA * obj, bool fBuy));
 void obj_to_keeper args ((OBJ_DATA * obj, CHAR_DATA * ch));
 OD *get_obj_keeper
 args ((CHAR_DATA * ch, CHAR_DATA * keeper, char *argument));
+static int magical_item_hp_cost args ((CHAR_DATA * ch, OBJ_DATA * obj));
+static bool pay_magical_item_hp_cost args ((CHAR_DATA * ch, OBJ_DATA * obj));
 
 #undef OD
 #undef    CD
@@ -85,6 +88,29 @@ bool can_loot (CHAR_DATA * ch, OBJ_DATA * obj)
     if (is_same_group (ch, owner))
         return TRUE;
 
+    return FALSE;
+}
+
+static int magical_item_hp_cost (CHAR_DATA * ch, OBJ_DATA * obj)
+{
+    return 1 + UMAX (0, obj->level - ch->level);
+}
+
+static bool pay_magical_item_hp_cost (CHAR_DATA * ch, OBJ_DATA * obj)
+{
+    int hp_cost;
+
+    hp_cost = magical_item_hp_cost (ch, obj);
+    ch->hit -= hp_cost;
+
+    if (ch->hit > 0)
+    {
+        act ("$p draws on your life.", ch, obj, NULL, TO_CHAR);
+        return TRUE;
+    }
+
+    act ("$p drains the last of your life.", ch, obj, NULL, TO_CHAR);
+    act ("$p drains the last of $n's life.", ch, obj, NULL, TO_ROOM);
     return FALSE;
 }
 
@@ -136,13 +162,6 @@ void get_obj (CHAR_DATA * ch, OBJ_DATA * obj, OBJ_DATA * container)
 
     if (container != NULL)
     {
-        if (container->pIndexData->vnum == OBJ_VNUM_PIT
-            && get_trust (ch) < obj->level)
-        {
-            send_to_char ("You are not powerful enough to use it.\n\r", ch);
-            return;
-        }
-
         if (container->pIndexData->vnum == OBJ_VNUM_PIT
             && !CAN_WEAR (container, ITEM_TAKE)
             && !IS_OBJ_STAT (obj, ITEM_HAD_TIMER))
@@ -1400,18 +1419,6 @@ bool remove_obj (CHAR_DATA * ch, int iWear, bool fReplace)
  */
 void wear_obj (CHAR_DATA * ch, OBJ_DATA * obj, bool fReplace)
 {
-    char buf[MAX_STRING_LENGTH];
-
-    if (ch->level < obj->level)
-    {
-        sprintf (buf, "You must be level %d to use this object.\n\r",
-                 obj->level);
-        send_to_char (buf, ch);
-        act ("$n tries to use $p, but is too inexperienced.",
-             ch, obj, NULL, TO_ROOM);
-        return;
-    }
-
     if (obj->item_type == ITEM_LIGHT)
     {
         if (!remove_obj (ch, WEAR_LIGHT, fReplace))
@@ -1887,13 +1894,6 @@ void do_quaff (CHAR_DATA * ch, char *argument)
         return;
     }
 
-    if (ch->level < obj->level)
-    {
-        send_to_char ("This liquid is too powerful for you to drink.\n\r",
-                      ch);
-        return;
-    }
-
     act ("$n quaffs $p.", ch, obj, NULL, TO_ROOM);
     act ("You quaff $p.", ch, obj, NULL, TO_CHAR);
 
@@ -1930,13 +1930,6 @@ void do_recite (CHAR_DATA * ch, char *argument)
         return;
     }
 
-    if (ch->level < scroll->level)
-    {
-        send_to_char ("This scroll is too complex for you to comprehend.\n\r",
-                      ch);
-        return;
-    }
-
     obj = NULL;
     if (arg2[0] == '\0')
     {
@@ -1954,6 +1947,13 @@ void do_recite (CHAR_DATA * ch, char *argument)
 
     act ("$n recites $p.", ch, scroll, NULL, TO_ROOM);
     act ("You recite $p.", ch, scroll, NULL, TO_CHAR);
+
+    if (!pay_magical_item_hp_cost (ch, scroll))
+    {
+        extract_obj (scroll);
+        raw_kill (ch);
+        return;
+    }
 
     if (number_percent () >= 20 + get_skill (ch, gsn_scrolls) * 4 / 5)
     {
@@ -2007,8 +2007,15 @@ void do_brandish (CHAR_DATA * ch, char *argument)
     {
         act ("$n brandishes $p.", ch, staff, NULL, TO_ROOM);
         act ("You brandish $p.", ch, staff, NULL, TO_CHAR);
-        if (ch->level < staff->level
-            || number_percent () >= 20 + get_skill (ch, gsn_staves) * 4 / 5)
+        if (!pay_magical_item_hp_cost (ch, staff))
+        {
+            if (--staff->value[2] <= 0)
+                extract_obj (staff);
+            raw_kill (ch);
+            return;
+        }
+
+        if (number_percent () >= 20 + get_skill (ch, gsn_staves) * 4 / 5)
         {
             act ("You fail to invoke $p.", ch, staff, NULL, TO_CHAR);
             act ("...and nothing happens.", ch, NULL, NULL, TO_ROOM);
@@ -2130,8 +2137,15 @@ void do_zap (CHAR_DATA * ch, char *argument)
             act ("You zap $P with $p.", ch, wand, obj, TO_CHAR);
         }
 
-        if (ch->level < wand->level
-            || number_percent () >= 20 + get_skill (ch, gsn_wands) * 4 / 5)
+        if (!pay_magical_item_hp_cost (ch, wand))
+        {
+            if (--wand->value[2] <= 0)
+                extract_obj (wand);
+            raw_kill (ch);
+            return;
+        }
+
+        if (number_percent () >= 20 + get_skill (ch, gsn_wands) * 4 / 5)
         {
             act ("Your efforts with $p produce only smoke and sparks.",
                  ch, wand, NULL, TO_CHAR);
@@ -2303,8 +2317,7 @@ void do_steal (CHAR_DATA * ch, char *argument)
     }
 
     if (!can_drop_obj (ch, obj)
-        || IS_SET (obj->extra_flags, ITEM_INVENTORY)
-        || obj->level > ch->level)
+        || IS_SET (obj->extra_flags, ITEM_INVENTORY))
     {
         send_to_char ("You can't pry it away.\n\r", ch);
         return;
@@ -2693,14 +2706,6 @@ void do_buy (CHAR_DATA * ch, char *argument)
             else
                 act ("$n tells you 'You can't afford to buy $p'.",
                      keeper, obj, ch, TO_VICT);
-            ch->reply = keeper;
-            return;
-        }
-
-        if (obj->level > ch->level)
-        {
-            act ("$n tells you 'You can't use $p yet'.",
-                 keeper, obj, ch, TO_VICT);
             ch->reply = keeper;
             return;
         }
