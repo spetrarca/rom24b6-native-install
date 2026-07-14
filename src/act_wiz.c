@@ -276,6 +276,7 @@ void do_outfit (CHAR_DATA * ch, char *argument)
     }
 
     /* do the weapon thing */
+    normalize_legacy_weapon_skills (ch);
     if ((obj = get_eq_char (ch, WEAR_WIELD)) == NULL)
     {
         sn = 0;
@@ -1357,7 +1358,7 @@ void do_ostat (CHAR_DATA * ch, char *argument)
                     send_to_char ("dagger\n\r", ch);
                     break;
                 case (WEAPON_SPEAR):
-                    send_to_char ("spear/staff\n\r", ch);
+                    send_to_char ("polearm\n\r", ch);
                     break;
                 case (WEAPON_MACE):
                     send_to_char ("mace/club\n\r", ch);
@@ -1366,7 +1367,7 @@ void do_ostat (CHAR_DATA * ch, char *argument)
                     send_to_char ("axe\n\r", ch);
                     break;
                 case (WEAPON_FLAIL):
-                    send_to_char ("flail\n\r", ch);
+                    send_to_char ("mace/club\n\r", ch);
                     break;
                 case (WEAPON_WHIP):
                     send_to_char ("whip\n\r", ch);

@@ -411,6 +411,8 @@ void fwrite_char (CHAR_DATA * ch, FILE * fp)
 			fprintf (fp, "%s %ld ", boards[i].short_name, ch->pcdata->last_note[i]);
 		fprintf (fp, "\n");
 
+        normalize_legacy_weapon_skills (ch);
+
         for (sn = 0; sn < MAX_SKILL; sn++)
         {
             if (skill_table[sn].name != NULL && ch->pcdata->learned[sn] > 0)
@@ -1403,7 +1405,8 @@ void fread_char (CHAR_DATA * ch, FILE * fp)
                         bug ("Fread_char: unknown skill. ", 0);
                     }
                     else
-                        ch->pcdata->learned[sn] = value;
+                        ch->pcdata->learned[sn] =
+                            UMAX (ch->pcdata->learned[sn], value);
                     fMatch = TRUE;
                 }
 
@@ -1459,6 +1462,8 @@ void fread_char (CHAR_DATA * ch, FILE * fp)
             fread_to_eol (fp);
         }
     }
+
+    normalize_legacy_weapon_skills (ch);
 }
 
 /* load a pet from the forgotten reaches */

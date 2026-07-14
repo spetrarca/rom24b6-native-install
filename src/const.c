@@ -1564,7 +1564,7 @@ const struct skill_type skill_table[MAX_SKILL] = {
      "", "!Dagger!", ""},
 
     {
-     "flail", {1, 1, 1, 1}, {6, 3, 6, 4},
+     "flail", {53, 53, 53, 53}, {0, 0, 0, 0},
      spell_null, TAR_IGNORE, POS_FIGHTING,
      &gsn_flail, SLOT (0), 0, 0,
      "", "!Flail!", ""},
@@ -1588,7 +1588,7 @@ const struct skill_type skill_table[MAX_SKILL] = {
      "", "!Shield!", ""},
 
     {
-     "spear", {1, 1, 1, 1}, {4, 4, 4, 3},
+     "spear", {53, 53, 53, 53}, {0, 0, 0, 0},
      spell_null, TAR_IGNORE, POS_FIGHTING,
      &gsn_spear, SLOT (0), 0, 0,
      "", "!Spear!", ""},
@@ -1811,7 +1811,7 @@ const struct group_type group_table[MAX_GROUP] = {
 
     {
      "cleric default", {-1, 40, -1, -1},
-     {"flail", "attack", "creation", "curative", "benedictions",
+     {"mace", "attack", "creation", "curative", "benedictions",
       "detection", "healing", "maladictions", "protective", "shield block",
       "transportation", "weather"}
      },
@@ -1830,7 +1830,7 @@ const struct group_type group_table[MAX_GROUP] = {
 
     {
      "weaponsmaster", {40, 40, 40, 20},
-     {"axe", "dagger", "flail", "mace", "polearm", "spear", "sword", "whip"}
+     {"axe", "dagger", "mace", "polearm", "sword", "whip"}
      },
 
     {

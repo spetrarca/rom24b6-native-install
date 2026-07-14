@@ -80,8 +80,8 @@ This document captures early planning requirements for the QuickMUD / ROM 2.4b6 
 | --- | --- | --- |
 | Remove alignment | Design needed | Desired direction is to get rid of alignment altogether. Need audit class restrictions, spells, item flags, mobs, help text, score output, area content, and mob kill effects. |
 | Remove movement points | Design needed | Need identify movement costs, regeneration, UI displays, commands, combat effects, and balance implications. |
-| Fold spear into polearm | Ready to define | Design direction is clear: map legacy spear/staff weapon type and skill to polearm for player progression, while preserving compatibility aliases/migration for area data, OLC, school weapons, help text, and existing player learned values. |
-| Fold flail into mace | Ready to define | Design direction is clear: map legacy flail weapon type and skill to mace for player progression, while preserving compatibility aliases/migration for area data, OLC, help text, and existing player learned values. |
+| Fold spear into polearm | Complete | Legacy spear/staff weapon classes and learned skill values now resolve to polearm for player progression, while old area data, OLC inputs, school weapons, help aliases, and existing player files remain compatible. |
+| Fold flail into mace | Complete | Legacy flail weapon classes and learned skill values now resolve to mace for player progression, while old area data, OLC inputs, school weapons, help aliases, and existing player files remain compatible. |
 | Widen group spread with no limit | Ready to define | Light code read found the old +/-5 group XP gate already commented out in `group_gain`. Small spec should verify behavior in-game, preserve no-limit grouping, document XP split behavior, and remove dead warnings if desired. |
 
 ### Hunger and Survival
@@ -169,14 +169,13 @@ These are good small-task candidates because they reduce operational friction or
 
 1. Full player loot and death-corpse policy.
 2. No-limit group spread verification and cleanup.
-3. Weapon consolidation compatibility plan: spear into polearm, flail into mace.
-4. Asymmetrical PVP range rule.
-5. Human-only PC creation scope.
-6. Login screen replacement.
-7. Nightly reboot verification.
-8. Summon spell investigation report.
-9. Hunger/thirst behavior report.
-10. Lore skill code review and expected behavior proposal.
+3. Asymmetrical PVP range rule.
+4. Human-only PC creation scope.
+5. Login screen replacement.
+6. Nightly reboot verification.
+7. Summon spell investigation report.
+8. Hunger/thirst behavior report.
+9. Lore skill code review and expected behavior proposal.
 
 ## Cross-Cutting Questions
 

@@ -142,14 +142,15 @@ Current leaning:
 - Future gear should be buildable for level 1.
 - Stock minimum-level equipment rules should likely be removed or bypassed.
 - Weapon categories should be simplified where useful.
+- Spear/staff now fold into polearm, and flail now folds into mace, with
+  compatibility retained for old area data, OLC inputs, school weapons, help
+  aliases, and existing player files.
 - Add a face slot for masks and similar equipment.
 
 Questions to refine:
 
 - Should item levels be removed from data, ignored in code, or both?
 - Which equipment use/equip/invoke checks need to change?
-- Should spear fold into polearm and flail fold into mace at the skill level,
-  item type level, help-text level, or all three?
 - What should masks do mechanically, socially, and in builder tooling?
 - Should equipment durability exist, and if so should it be opt-in by item tag?
 

@@ -44,6 +44,7 @@
  * Local functions.
  */
 void affect_modify args ((CHAR_DATA * ch, AFFECT_DATA * paf, bool fAdd));
+int normalize_weapon_table_index args ((int type));
 
 
 /* friend stuff -- for NPC's mostly */
@@ -114,15 +115,29 @@ int material_lookup (const char *name)
     return 0;
 }
 
+int normalize_weapon_table_index (int type)
+{
+    if (weapon_table[type].type == WEAPON_SPEAR)
+        return weapon_lookup ("polearm");
+    if (weapon_table[type].type == WEAPON_FLAIL)
+        return weapon_lookup ("mace");
+    return type;
+}
+
 int weapon_lookup (const char *name)
 {
     int type;
+
+    if (!str_cmp (name, "spear") || !str_cmp (name, "staff"))
+        return weapon_lookup ("polearm");
+    if (!str_cmp (name, "flail"))
+        return weapon_lookup ("mace");
 
     for (type = 0; weapon_table[type].name != NULL; type++)
     {
         if (LOWER (name[0]) == LOWER (weapon_table[type].name[0])
             && !str_prefix (name, weapon_table[type].name))
-            return type;
+            return normalize_weapon_table_index (type);
     }
 
     return -1;
@@ -131,6 +146,11 @@ int weapon_lookup (const char *name)
 int weapon_type (const char *name)
 {
     int type;
+
+    if (!str_cmp (name, "spear") || !str_cmp (name, "staff"))
+        return WEAPON_SPEAR;
+    if (!str_cmp (name, "flail"))
+        return WEAPON_FLAIL;
 
     for (type = 0; weapon_table[type].name != NULL; type++)
     {
@@ -343,9 +363,59 @@ bool is_old_mob (CHAR_DATA * ch)
 }
 
 /* for returning skill information */
+int normalize_weapon_skill_sn (int sn)
+{
+    if (sn == gsn_spear)
+        return gsn_polearm;
+    if (sn == gsn_flail)
+        return gsn_mace;
+    return sn;
+}
+
+void normalize_legacy_weapon_skills (CHAR_DATA * ch)
+{
+    if (ch == NULL || IS_NPC (ch) || ch->pcdata == NULL)
+        return;
+
+    ch->pcdata->learned[gsn_polearm] = UMAX (ch->pcdata->learned[gsn_polearm],
+                                             ch->pcdata->learned[gsn_spear]);
+    ch->pcdata->learned[gsn_spear] = 0;
+
+    ch->pcdata->learned[gsn_mace] = UMAX (ch->pcdata->learned[gsn_mace],
+                                          ch->pcdata->learned[gsn_flail]);
+    ch->pcdata->learned[gsn_flail] = 0;
+}
+
+int weapon_skill_lookup (int weapon_class)
+{
+    switch (weapon_class)
+    {
+        default:
+            return -1;
+        case (WEAPON_SWORD):
+            return gsn_sword;
+        case (WEAPON_DAGGER):
+            return gsn_dagger;
+        case (WEAPON_SPEAR):
+            return gsn_polearm;
+        case (WEAPON_MACE):
+            return gsn_mace;
+        case (WEAPON_AXE):
+            return gsn_axe;
+        case (WEAPON_FLAIL):
+            return gsn_mace;
+        case (WEAPON_WHIP):
+            return gsn_whip;
+        case (WEAPON_POLEARM):
+            return gsn_polearm;
+    }
+}
+
 int get_skill (CHAR_DATA * ch, int sn)
 {
     int skill;
+
+    sn = normalize_weapon_skill_sn (sn);
 
     if (sn == -1)
     {                            /* shorthand for level based skills */
@@ -422,10 +492,9 @@ int get_skill (CHAR_DATA * ch, int sn)
 
         else if (sn == gsn_sword
                  || sn == gsn_dagger
-                 || sn == gsn_spear
                  || sn == gsn_mace
                  || sn == gsn_axe
-                 || sn == gsn_flail || sn == gsn_whip || sn == gsn_polearm)
+                 || sn == gsn_whip || sn == gsn_polearm)
             skill = 40 + 5 * ch->level / 2;
 
         else
@@ -450,48 +519,19 @@ int get_skill (CHAR_DATA * ch, int sn)
 int get_weapon_sn (CHAR_DATA * ch)
 {
     OBJ_DATA *wield;
-    int sn;
 
     wield = get_eq_char (ch, WEAR_WIELD);
     if (wield == NULL || wield->item_type != ITEM_WEAPON)
-        sn = gsn_hand_to_hand;
-    else
-        switch (wield->value[0])
-        {
-            default:
-                sn = -1;
-                break;
-            case (WEAPON_SWORD):
-                sn = gsn_sword;
-                break;
-            case (WEAPON_DAGGER):
-                sn = gsn_dagger;
-                break;
-            case (WEAPON_SPEAR):
-                sn = gsn_spear;
-                break;
-            case (WEAPON_MACE):
-                sn = gsn_mace;
-                break;
-            case (WEAPON_AXE):
-                sn = gsn_axe;
-                break;
-            case (WEAPON_FLAIL):
-                sn = gsn_flail;
-                break;
-            case (WEAPON_WHIP):
-                sn = gsn_whip;
-                break;
-            case (WEAPON_POLEARM):
-                sn = gsn_polearm;
-                break;
-        }
-    return sn;
+        return gsn_hand_to_hand;
+
+    return weapon_skill_lookup (wield->value[0]);
 }
 
 int get_weapon_skill (CHAR_DATA * ch, int sn)
 {
     int skill;
+
+    sn = normalize_weapon_skill_sn (sn);
 
     /* -1 is exotic */
     if (IS_NPC (ch))
@@ -3637,4 +3677,3 @@ bool is_full_name( const char *str, char *namelist )
 			return TRUE;
 	}
 }
-

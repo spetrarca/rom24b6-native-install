@@ -58,13 +58,18 @@ int skill_lookup (const char *name)
 {
     int sn;
 
+    if (!str_cmp (name, "spear") || !str_cmp (name, "staff"))
+        return gsn_polearm;
+    if (!str_cmp (name, "flail"))
+        return gsn_mace;
+
     for (sn = 0; sn < MAX_SKILL; sn++)
     {
         if (skill_table[sn].name == NULL)
             break;
         if (LOWER (name[0]) == LOWER (skill_table[sn].name[0])
             && !str_prefix (name, skill_table[sn].name))
-            return sn;
+            return normalize_weapon_skill_sn (sn);
     }
 
     return -1;
@@ -3436,7 +3441,7 @@ void spell_identify (int sn, int level, CHAR_DATA * ch, void *vo, int target)
                     send_to_char ("dagger.\n\r", ch);
                     break;
                 case (WEAPON_SPEAR):
-                    send_to_char ("spear/staff.\n\r", ch);
+                    send_to_char ("polearm.\n\r", ch);
                     break;
                 case (WEAPON_MACE):
                     send_to_char ("mace/club.\n\r", ch);
@@ -3445,7 +3450,7 @@ void spell_identify (int sn, int level, CHAR_DATA * ch, void *vo, int target)
                     send_to_char ("axe.\n\r", ch);
                     break;
                 case (WEAPON_FLAIL):
-                    send_to_char ("flail.\n\r", ch);
+                    send_to_char ("mace/club.\n\r", ch);
                     break;
                 case (WEAPON_WHIP):
                     send_to_char ("whip.\n\r", ch);
