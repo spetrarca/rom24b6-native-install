@@ -333,6 +333,7 @@ const struct cmd_type cmd_table[] = {
     {"holylight",	do_holylight,	POS_DEAD, IM, LOG_NORMAL, 1},
     {"incognito",	do_incognito,	POS_DEAD, IM, LOG_NORMAL, 1},
     {"invis",		do_invis,	POS_DEAD, IM, LOG_NORMAL, 0},
+    {"lorestat",	do_lorestat,	POS_DEAD, IM, LOG_NORMAL, 1},
     {"log",		do_log,		POS_DEAD, L1, LOG_ALWAYS, 1},
     {"memory",		do_memory,	POS_DEAD, IM, LOG_NORMAL, 1},
     {"mwhere",		do_mwhere,	POS_DEAD, IM, LOG_NORMAL, 1},

@@ -160,6 +160,7 @@ DECLARE_DO_FUN(	do_kill			);
 DECLARE_DO_FUN(	do_list			);
 DECLARE_DO_FUN( do_load			);
 DECLARE_DO_FUN(	do_lock			);
+DECLARE_DO_FUN( do_lorestat		);
 DECLARE_DO_FUN(	do_log			);
 DECLARE_DO_FUN(	do_look			);
 DECLARE_DO_FUN(	do_memory		);

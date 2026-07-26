@@ -4,7 +4,9 @@ area/shutdown.txt
 area/copyover.data
 log/*.log
 player/*
-!player/.gitignore
+!player/.gitignore 
+docs/*
+!docs/.gitignore
 gods/*
 !gods/.gitignore
 src/obj/

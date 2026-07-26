@@ -63,6 +63,9 @@
  * Local functions.
  */
 ROOM_INDEX_DATA *find_location args ((CHAR_DATA * ch, char *arg));
+static void lorestat_print_obj args ((CHAR_DATA * ch, OBJ_DATA * obj));
+static void lorestat_print_obj_index args ((CHAR_DATA * ch,
+                                            OBJ_INDEX_DATA * obj_index));
 
 void do_wiznet (CHAR_DATA * ch, char *argument)
 {
@@ -1213,6 +1216,361 @@ void do_rstat (CHAR_DATA * ch, char *argument)
     }
 
     return;
+}
+
+static void lorestat_append_tag (char *buf, const char *tag)
+{
+    if (buf[0] != '\0')
+        strcat (buf, ", ");
+    strcat (buf, tag);
+}
+
+static bool lorestat_is_spell_bearing (int item_type)
+{
+    switch (item_type)
+    {
+        case ITEM_SCROLL:
+        case ITEM_POTION:
+        case ITEM_PILL:
+        case ITEM_WAND:
+        case ITEM_STAFF:
+            return TRUE;
+    }
+
+    return FALSE;
+}
+
+static bool lorestat_has_affects (AFFECT_DATA * paf)
+{
+    return paf != NULL;
+}
+
+static bool lorestat_obj_has_affects (OBJ_DATA * obj)
+{
+    if (obj->affected != NULL)
+        return TRUE;
+
+    return !obj->enchanted && obj->pIndexData->affected != NULL;
+}
+
+static bool lorestat_magic_expected (int item_type, bool has_affects)
+{
+    return has_affects || lorestat_is_spell_bearing (item_type)
+        || item_type == ITEM_PORTAL;
+}
+
+static bool lorestat_plainly_named_component (OBJ_INDEX_DATA * obj_index)
+{
+    return obj_index->item_type == ITEM_WARP_STONE
+        && (!str_infix ("warp", obj_index->name)
+            || !str_infix ("warp", obj_index->short_descr)
+            || !str_infix ("component", obj_index->name)
+            || !str_infix ("component", obj_index->short_descr));
+}
+
+static void lorestat_print_preview (CHAR_DATA * ch, int item_type,
+                                    int extra_flags, bool has_affects,
+                                    bool *mundane_fallback)
+{
+    *mundane_fallback = FALSE;
+    send_to_char ("Player preview:\n\r", ch);
+
+    if (item_type == ITEM_WARP_STONE)
+    {
+        send_to_char
+            ("  This is a passage-stone, a sliver of old working that remembers roads no living feet have walked.\n\r",
+             ch);
+        send_to_char
+            ("  It feels less like treasure than permission.\n\r", ch);
+        return;
+    }
+
+    if (lorestat_is_spell_bearing (item_type))
+    {
+        send_to_char
+            ("  Words or workings lie folded inside it, waiting for blood and nerve to wake them.\n\r",
+             ch);
+        send_to_char
+            ("  It is quiet now, but not empty.\n\r", ch);
+        return;
+    }
+
+    if (item_type == ITEM_PORTAL)
+    {
+        send_to_char
+            ("  Its hollow remembers elsewhere.  The air around it has been taught to open.\n\r",
+             ch);
+        return;
+    }
+
+    if (IS_SET (extra_flags, ITEM_MAGIC) || has_affects)
+    {
+        send_to_char
+            ("  A pressure clings to it, like heat banked under old ash.\n\r",
+             ch);
+        send_to_char
+            ("  Whatever made it useful did not leave cleanly.\n\r", ch);
+        return;
+    }
+
+    if (item_type == ITEM_MAP)
+    {
+        send_to_char
+            ("  Someone made this to remember a path, though the path may not remember them back.\n\r",
+             ch);
+        return;
+    }
+
+    if (item_type == ITEM_KEY || item_type == ITEM_ROOM_KEY)
+    {
+        send_to_char
+            ("  It knows the shape of one refusal, and perhaps the old answer to it.\n\r",
+             ch);
+        return;
+    }
+
+    if (item_type == ITEM_WEAPON)
+    {
+        send_to_char
+            ("  Its story is practical: hands, fear, force, and the habit of surviving another day.\n\r",
+             ch);
+        return;
+    }
+
+    if (item_type == ITEM_ARMOR || item_type == ITEM_CLOTHING)
+    {
+        send_to_char
+            ("  It was made to stand between a body and the world's teeth.\n\r",
+             ch);
+        return;
+    }
+
+    if (item_type == ITEM_TREASURE || item_type == ITEM_GEM
+        || item_type == ITEM_JEWELRY)
+    {
+        send_to_char
+            ("  Hands valued it once.  Whether for shine, oath, trade, or rite is harder to say.\n\r",
+             ch);
+        return;
+    }
+
+    *mundane_fallback = TRUE;
+    send_to_char
+        ("  No old story clings to it.  It seems to be only what it appears to be.\n\r",
+         ch);
+}
+
+static void lorestat_build_tags (char *buf, int item_type, int extra_flags,
+                                 bool has_affects, bool mundane_fallback)
+{
+    buf[0] = '\0';
+
+    if (item_type == ITEM_WARP_STONE)
+    {
+        lorestat_append_tag (buf, "component");
+        lorestat_append_tag (buf, "passage-stone");
+        lorestat_append_tag (buf, "old-working");
+    }
+
+    if (lorestat_is_spell_bearing (item_type))
+        lorestat_append_tag (buf, "spell-bearing");
+
+    if (item_type == ITEM_PORTAL)
+        lorestat_append_tag (buf, "portal");
+    if (item_type == ITEM_MAP)
+        lorestat_append_tag (buf, "map");
+    if (item_type == ITEM_KEY || item_type == ITEM_ROOM_KEY)
+        lorestat_append_tag (buf, "key");
+    if (item_type == ITEM_WEAPON)
+        lorestat_append_tag (buf, "weapon");
+    if (item_type == ITEM_ARMOR || item_type == ITEM_CLOTHING)
+        lorestat_append_tag (buf, "protection");
+    if (item_type == ITEM_TREASURE)
+        lorestat_append_tag (buf, "treasure");
+    if (item_type == ITEM_GEM)
+        lorestat_append_tag (buf, "gem");
+    if (item_type == ITEM_JEWELRY)
+        lorestat_append_tag (buf, "jewelry");
+    if (IS_SET (extra_flags, ITEM_MAGIC))
+        lorestat_append_tag (buf, "magic");
+    if (has_affects)
+        lorestat_append_tag (buf, "affected");
+    if (mundane_fallback)
+        lorestat_append_tag (buf, "mundane");
+
+    if (buf[0] == '\0')
+        lorestat_append_tag (buf, "uncategorized");
+}
+
+static void lorestat_print_affects (CHAR_DATA * ch, AFFECT_DATA * paf,
+                                    const char *label, bool *found)
+{
+    char buf[MAX_STRING_LENGTH];
+
+    for (; paf != NULL; paf = paf->next)
+    {
+        sprintf (buf, "  %s affects %s by %d, level %d.\n\r",
+                 label, affect_loc_name (paf->location), paf->modifier,
+                 paf->level);
+        send_to_char (buf, ch);
+        *found = TRUE;
+    }
+}
+
+static void lorestat_print_admin_facts (CHAR_DATA * ch, const char *source,
+                                        OBJ_INDEX_DATA * obj_index,
+                                        int item_type, int extra_flags,
+                                        char *material, int level,
+                                        int value[5], AFFECT_DATA * affects,
+                                        AFFECT_DATA * instance_affects,
+                                        bool has_affects,
+                                        bool mundane_fallback)
+{
+    char buf[MAX_STRING_LENGTH];
+    char tag_buf[MAX_STRING_LENGTH];
+    bool found_affect;
+    bool hinted;
+
+    send_to_char ("\n\rAdmin facts:\n\r", ch);
+
+    sprintf (buf, "  Source: %s\n\r", source);
+    send_to_char (buf, ch);
+
+    sprintf (buf, "  Vnum: %d  Type: %s  Material: %s  Level: %d\n\r",
+             obj_index->vnum, item_name (item_type),
+             material == NULL || material[0] == '\0' ? "(none)" : material,
+             level);
+    send_to_char (buf, ch);
+
+    sprintf (buf, "  Flags: %s\n\r", extra_bit_name (extra_flags));
+    send_to_char (buf, ch);
+
+    sprintf (buf, "  Values: %d %d %d %d %d\n\r",
+             value[0], value[1], value[2], value[3], value[4]);
+    send_to_char (buf, ch);
+
+    lorestat_build_tags (tag_buf, item_type, extra_flags, has_affects,
+                         mundane_fallback);
+    send_to_char ("  lore tags: ", ch);
+    send_to_char (tag_buf, ch);
+    send_to_char ("\n\r", ch);
+
+    send_to_char ("  Affects:\n\r", ch);
+    found_affect = FALSE;
+    lorestat_print_affects (ch, instance_affects, "instance", &found_affect);
+    lorestat_print_affects (ch, affects, "prototype", &found_affect);
+    if (!found_affect)
+        send_to_char ("    none\n\r", ch);
+
+    send_to_char ("  Builder hints:\n\r", ch);
+    hinted = FALSE;
+
+    if (lorestat_plainly_named_component (obj_index))
+    {
+        send_to_char
+            ("    - This component is plainly named; hide it as a gem, stone, relic, or other ordinary object.\n\r",
+             ch);
+        hinted = TRUE;
+    }
+
+    if (lorestat_magic_expected (item_type, has_affects)
+        && !IS_SET (extra_flags, ITEM_MAGIC))
+    {
+        send_to_char
+            ("    - This object has magical behavior or affects but lacks the magic flag.\n\r",
+             ch);
+        hinted = TRUE;
+    }
+
+    if (mundane_fallback)
+    {
+        send_to_char
+            ("    - Preview used the generic mundane fallback.\n\r", ch);
+        hinted = TRUE;
+    }
+
+    if (!hinted)
+        send_to_char ("    none\n\r", ch);
+}
+
+static void lorestat_print_obj_index (CHAR_DATA * ch,
+                                      OBJ_INDEX_DATA * obj_index)
+{
+    bool has_affects;
+    bool mundane_fallback;
+
+    has_affects = lorestat_has_affects (obj_index->affected);
+    lorestat_print_preview (ch, obj_index->item_type, obj_index->extra_flags,
+                            has_affects, &mundane_fallback);
+    lorestat_print_admin_facts (ch, "prototype", obj_index,
+                                obj_index->item_type, obj_index->extra_flags,
+                                obj_index->material, obj_index->level,
+                                obj_index->value, obj_index->affected, NULL,
+                                has_affects, mundane_fallback);
+}
+
+static void lorestat_print_obj (CHAR_DATA * ch, OBJ_DATA * obj)
+{
+    AFFECT_DATA *prototype_affects;
+    bool has_affects;
+    bool mundane_fallback;
+
+    prototype_affects = obj->enchanted ? NULL : obj->pIndexData->affected;
+    has_affects = lorestat_obj_has_affects (obj);
+    lorestat_print_preview (ch, obj->item_type, obj->extra_flags,
+                            has_affects, &mundane_fallback);
+    lorestat_print_admin_facts (ch, "loaded object", obj->pIndexData,
+                                obj->item_type, obj->extra_flags,
+                                obj->material, obj->level, obj->value,
+                                prototype_affects, obj->affected,
+                                has_affects, mundane_fallback);
+}
+
+void do_lorestat (CHAR_DATA * ch, char *argument)
+{
+    char original[MAX_INPUT_LENGTH];
+    char arg[MAX_INPUT_LENGTH];
+    char arg2[MAX_INPUT_LENGTH];
+    OBJ_DATA *obj;
+    OBJ_INDEX_DATA *obj_index;
+
+    strcpy (original, argument);
+    argument = one_argument (argument, arg);
+    one_argument (argument, arg2);
+
+    if (arg[0] == '\0')
+    {
+        send_to_char ("Syntax:\n\r", ch);
+        send_to_char ("  lorestat <object>\n\r", ch);
+        send_to_char ("  lorestat vnum <vnum>\n\r", ch);
+        return;
+    }
+
+    if (!str_cmp (arg, "vnum"))
+    {
+        if (arg2[0] == '\0' || !is_number (arg2))
+        {
+            send_to_char ("Syntax: lorestat vnum <vnum>\n\r", ch);
+            return;
+        }
+
+        if ((obj_index = get_obj_index (atoi (arg2))) == NULL)
+        {
+            send_to_char ("No object has that vnum.\n\r", ch);
+            return;
+        }
+
+        lorestat_print_obj_index (ch, obj_index);
+        return;
+    }
+
+    if ((obj = get_obj_world (ch, original)) == NULL)
+    {
+        send_to_char ("Nothing like that in hell, earth, or heaven.\n\r", ch);
+        return;
+    }
+
+    lorestat_print_obj (ch, obj);
 }
 
 

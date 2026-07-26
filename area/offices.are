@@ -22,6 +22,14 @@ unknown~
 furniture 0 0
 0 0 0 0 0
 0 70 0 P
+#10001
+test flail~
+a test flail~
+A test flail. You shouldn't have this.~
+iron~
+weapon P AN
+flail 1 8 smash 0
+0 55 0 P
 #0
 
 
@@ -31,7 +39,7 @@ furniture 0 0
 The Laugh Factory~
 An empty comedy club. It stinks of stale cigarette smoke and desperation.
 ~
-0 8200 0
+0 8204 0
 S
 #0
 

@@ -46,3 +46,4 @@
 [ 5270] Norm: door
 [ 7883] Norm: room
 [ 3001] Norm: guild
+[10000] Norm: survival
